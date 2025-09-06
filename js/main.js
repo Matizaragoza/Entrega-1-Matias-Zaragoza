@@ -39,7 +39,7 @@ function pedirDatosCliente() {
 function pedirCodigoProducto() {
   const entrada = prompt(
     "Ingresá el CÓDIGO del producto.\n" +
-    "Escribí LISTA para ver el catálogo (aparece en consola y en un alert),\n" +
+    "Escribí LISTA para ver el catálogo\n" +
     "o Cancelar para salir."
   );
   if (entrada === null) return null;
@@ -237,11 +237,10 @@ function mostrarResumen(cliente, items, info) {
 // ====== Punto de entrada ======
 function main() {
   alert(
-    "Bienvenido al Simulador de Ventas & Stock (Sneaker Store).\n" +
-    "Abrí la consola (F12) para ver el catálogo y los detalles."
+    "Bienvenido al Simulador de Ventas & Stock de Golden Crowz Snakers.\n"
   );
 
-  if (!confirm("¿Querés iniciar una compra de prueba?")) {
+  if (!confirm("¿Querés iniciar una compra?")) {
     alert("¡Gracias por visitar! Podés recargar la página cuando quieras.");
     return;
   }
