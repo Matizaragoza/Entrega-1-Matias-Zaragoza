@@ -104,7 +104,7 @@ function agregarAlCarrito(producto, cantidad) {
   // Restar del stock del catálogo
   producto.stock -= cantidad;
 
-  // Si ya existe en el carrito, sumar cantidad; si no, pushear
+  
   const existente = carrito.find(i => i.codigo === producto.codigo);
   if (existente) {
     existente.cantidad += cantidad;
@@ -126,7 +126,7 @@ function agregarAlCarrito(producto, cantidad) {
 function calcularSubtotal(items) {
   let subtotal = 0;
   for (const it of items) {
-    subtotal += it.precio * it.cantidad; // ciclo + operación
+    subtotal += it.precio * it.cantidad; 
   }
   return subtotal;
 }
@@ -154,7 +154,7 @@ function calcularIVA(base, tasa) {
 }
 
 function elegirEnvio() {
-  // do..while para forzar selección válida
+  
   let opcion;
   do {
     const entrada = prompt(
@@ -163,7 +163,7 @@ function elegirEnvio() {
       `2) Envío estándar (${monedaARS(COSTO_ENVIO)})`
     );
     if (entrada === null) {
-      // Si cancela, por defecto retiro sin cargo
+     
       return { costo: 0, etiqueta: "Retiro en local (sin cargo)" };
     }
     opcion = Number(entrada);
