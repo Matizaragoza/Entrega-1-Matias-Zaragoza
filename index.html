@@ -3,26 +3,35 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <link rel="stylesheet" href="style/style.css">
+
   <title>Simulador de Ventas & Stock —  Entrega 1 (Zaragoza) </title>
+
   <meta name="description" content="Simulador por consola: carrito de compras, stock, IVA, cupón y envío.">
-  <style>
-   
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.4; margin: 2rem; }
-    code { background: #f4f4f4; padding: .1rem .3rem; border-radius: .25rem; }
-  </style>
+  
 </head>
 <body>
-  <h1>Simulador de Ventas & Stock (Golden Crowz Snakers)</h1>
-  <p>
-    Este simulador corre <strong>íntegramente por consola</strong> y cuadros de diálogo (<code>alert</code>, <code>prompt</code>, <code>confirm</code>).
-    Modela un flujo de compra: catálogo, selección de productos por código, cantidades, control de stock,
-    cálculo de subtotal, IVA, cupón de descuento y método de entrega.
-  </p>
-  <p><strong>Cómo probar:</strong> abrí este archivo con tu navegador y luego la consola (F12 → pestaña <em>Console</em>).<br>
-    Al cargar la página, seguí las instrucciones de los diálogos. Podés escribir <code>LISTA</code> cuando te pida un código para volver a ver el catálogo en la consola.
-  </p>
-
   
+  <h1>Simulador de Ventas & Stock (Golden Crowz Snakers)</h1>
+  
+  <input type="text" id="nombreCliente" placeholder="Tu nombre">
+  <button id="iniciarCompra">Iniciar Compra</button>
+
+  <div id="catalogo"></div>
+  <div id="resumen"></div>
+  <div id="checkout" >
+    <h2>Checkout</h2>
+    <p>Cupones (máx 2, separados por coma): <input type="text" id="inputCupones" placeholder="ZAPA10,MB5"></p>
+    <p>Envío:
+      <select id="selectEnvio">
+        <option value="0">Retiro en local (gratis)</option>
+        <option value="5000">Envío estándar (5000 ARS)</option>
+      </select>
+    </p>
+    <button id="finalizarCompra">Finalizar Compra</button>
+  </div>
+    
 
   <!-- Referencia  al JS  -->
   <script src="js/main.js"></script>
