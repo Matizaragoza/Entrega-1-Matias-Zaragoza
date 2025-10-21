@@ -1,52 +1,30 @@
 "use strict";
 
-/* ============================================================
-   Simulador de Ventas & Stock — DOM Interactivo Golden Crowz
-   ============================================================ */
-
-// ====== Datos y constantes ======
 const IVA = 0.21;
-
 const CATALOGO = [
   { codigo: 101, nombre: "Zapatillas Nike Air Force", precio: 55000, stock: 10 },
-  { codigo: 102, nombre: "Zapatillas Adidas yeezy",     precio: 48000, stock: 10 },
-  { codigo: 201, nombre: "Remera Levis D2 Dry-Fit",        precio: 22000, stock: 10 },
-  { codigo: 301, nombre: "Perfume Bross London GOLD",         precio: 35000, stock: 10 },
+  { codigo: 102, nombre: "Zapatillas Adidas Yeezy", precio: 48000, stock: 10 },
+  { codigo: 201, nombre: "Remera Levis D2 Dry-Fit", precio: 22000, stock: 10 },
+  { codigo: 301, nombre: "Perfume Bross London GOLD", precio: 35000, stock: 10 },
 ];
 
-let carrito = []; // items: { codigo, nombre, precio, cantidad }
+let carrito = [];
 
-// ====== Utilidades ======
-function monedaARS(n) {
-  return n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
-}
+const monedaARS = n => n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+const inputToInteger = str => /^\d+$/.test(String(str).trim()) ? Number(str) : NaN;
+const buscarProductoPorCodigo = codigo => CATALOGO.find(p => p.codigo === codigo) || null;
 
-function inputToInteger(str) {
-  if (typeof str !== "string" && typeof str !== "number") return NaN;
-  const limpio = String(str).trim();
-  if (!/^\d+$/.test(limpio)) return NaN;
-  return Number(limpio);
-}
-
-// ====== Lógica del carrito ======
-function buscarProductoPorCodigo(codigo) {
-  return CATALOGO.find(p => p.codigo === codigo) || null;
-}
-
-function agregarAlCarritoDOM(codigo) {
+// ====== Carrito ======
+function agregarAlCarrito(codigo) {
   const producto = buscarProductoPorCodigo(codigo);
-  const inputValor = document.getElementById(`cant-${codigo}`).value;
-  const cantidad = inputToInteger(inputValor);
+  const cantidad = inputToInteger(document.getElementById(`cant-${codigo}`).value);
 
   if (!producto || Number.isNaN(cantidad) || cantidad < 1 || cantidad > producto.stock) {
-    alert("Cantidad inválida o stock insuficiente");
+    Swal.fire("Cantidad inválida o stock insuficiente");
     return;
   }
 
-  // Restar del stock
   producto.stock -= cantidad;
-
-  // Agregar o actualizar en carrito
   const existente = carrito.find(i => i.codigo === codigo);
   if (existente) {
     existente.cantidad += cantidad;
@@ -55,42 +33,29 @@ function agregarAlCarritoDOM(codigo) {
   }
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
-
-  // Actualizar DOM
-  mostrarResumenDOM();
-  mostrarCatalogoDOM();
+  mostrarResumen();
+  mostrarCatalogo();
 }
- 
 
 // ====== Cálculos ======
-function calcularSubtotal(items) {
-  return items.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
-}
-
-function calcularIVA(base, tasa) {
-  return base * tasa;
-}
-
-function calcularTotales(subtotal, descuento, envioCosto) {
+const calcularSubtotal = items => items.reduce((acc, it) => acc + it.precio * it.cantidad, 0);
+const calcularIVA = base => base * IVA;
+const calcularTotales = (subtotal, descuento, envioCosto) => {
   const baseImponible = subtotal - descuento;
-  const iva = calcularIVA(baseImponible, IVA);
+  const iva = calcularIVA(baseImponible);
   const total = baseImponible + iva + envioCosto;
   return { baseImponible, iva, total };
-}
+};
 
-// ====== Cupones ======
 function evaluarCupon(cup, subtotal) {
   if (!cup) return { aplicable: false, descuento: 0, etiqueta: "Sin cupón" };
-  if (cup === "ZAPA10") {
-    if (subtotal >= 50000) return { aplicable: true, descuento: subtotal * 0.10, etiqueta: "ZAPA10 (-10%)" };
-    return { aplicable: false, descuento: 0, etiqueta: "ZAPA10 (no aplica: mínimo $50.000)" };
-  }
+  if (cup === "ZAPA10" && subtotal >= 50000) return { aplicable: true, descuento: subtotal * 0.1, etiqueta: "ZAPA10 (-10%)" };
   if (cup === "MB5") return { aplicable: true, descuento: subtotal * 0.05, etiqueta: "MB5 (-5%)" };
   return { aplicable: false, descuento: 0, etiqueta: `Cupón inválido: ${cup}` };
 }
 
 function calcularDescuentoMultiple(subtotal, cupones) {
-  const DESCUENTO_MAXIMO_RATIO = 0.5; // 50% tope
+  const DESCUENTO_MAXIMO = subtotal * 0.5;
   let totalDescuento = 0;
   const etiquetas = [];
 
@@ -100,138 +65,113 @@ function calcularDescuentoMultiple(subtotal, cupones) {
     if (res.aplicable) totalDescuento += res.descuento;
   }
 
-  const maxPermitido = subtotal * DESCUENTO_MAXIMO_RATIO;
-  if (totalDescuento > maxPermitido) {
-    totalDescuento = maxPermitido;
-    etiquetas.push("Descuento limitado al 50% (seguridad)");
+  if (totalDescuento > DESCUENTO_MAXIMO) {
+    totalDescuento = DESCUENTO_MAXIMO;
+    etiquetas.push("Descuento limitado al 50%");
   }
 
   return { descuento: totalDescuento, etiquetas };
 }
 
-// ====== DOM: Mostrar catálogo ======
-function mostrarCatalogoDOM() {
-  const contenedor = document.getElementById("catalogo");
-  contenedor.innerHTML = "";
+// ====== DOM ======
+function mostrarCatalogo() {
+  const cont = document.getElementById("catalogo");
+  cont.innerHTML = "";
 
-  CATALOGO.forEach(producto => {
+  CATALOGO.forEach(prod => {
     const div = document.createElement("div");
     div.className = "producto";
     div.innerHTML = `
-      <h3>${producto.nombre}</h3>
-      <p>Precio: ${monedaARS(producto.precio)}</p>
-      <p>Stock: ${producto.stock}</p>
-      <input type="number" min="1" max="${producto.stock}" id="cant-${producto.codigo}" placeholder="Cantidad">
-      <button data-codigo="${producto.codigo}">Agregar al carrito</button>
+      <h3>${prod.nombre}</h3>
+      <p>Precio: ${monedaARS(prod.precio)}</p>
+      <p>Stock: ${prod.stock}</p>
+      <input type="number" min="1" max="${prod.stock}" id="cant-${prod.codigo}" placeholder="Cantidad">
+      <button data-codigo="${prod.codigo}">Agregar</button>
     `;
-    contenedor.appendChild(div);
+    cont.appendChild(div);
   });
 
-  contenedor.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const codigo = Number(e.target.dataset.codigo);
-      agregarAlCarritoDOM(codigo);
-    });
+  cont.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", e => agregarAlCarrito(Number(e.target.dataset.codigo)));
   });
 }
 
-// ====== DOM: Mostrar resumen parcial ======
-function mostrarResumenDOM() {
-  const contenedor = document.getElementById("resumen");
-  contenedor.innerHTML = "";
-  if (!carrito.length) return;
-
-  const subtotal = calcularSubtotal(carrito);
-  carrito.forEach(item => {
-    contenedor.innerHTML += `<p>${item.nombre} x${item.cantidad} = ${monedaARS(item.precio * item.cantidad)}</p>`;
-  });
-  contenedor.innerHTML += `<hr><p>Subtotal: ${monedaARS(subtotal)}</p>`;
-}
-
-// ====== DOM: Mostrar resumen final ======
-function mostrarResumenDOMFinal(info) {
-  const contenedor = document.getElementById("resumen");
-  contenedor.innerHTML = "";
+function mostrarResumen() {
+  const cont = document.getElementById("resumen");
+  cont.innerHTML = "";
   if (!carrito.length) {
-    contenedor.innerHTML = "<p>Carrito vacío.</p>";
+    cont.innerHTML = "<p>El carrito está vacío.</p>";
     return;
   }
+  const subtotal = calcularSubtotal(carrito);
   carrito.forEach(item => {
-    const sub = item.precio * item.cantidad;
-    contenedor.innerHTML += `<p>${item.nombre} x${item.cantidad} = ${monedaARS(sub)}</p>`;
+    cont.innerHTML += `<p>${item.nombre} x${item.cantidad} = ${monedaARS(item.precio * item.cantidad)}</p>`;
   });
-  contenedor.innerHTML += `
-    <hr>
-    <p>Subtotal: ${monedaARS(info.subtotal)}</p>
-    <p>Descuento: ${monedaARS(info.descuento)} (${info.etiquetas.join(" | ")})</p>
-    <p>Envío: ${info.envio.etiqueta} → ${monedaARS(info.envio.costo)}</p>
-    <p>Base imponible: ${monedaARS(info.baseImponible)}</p>
-    <p>IVA: ${monedaARS(info.iva)}</p>
-    <p><strong>Total: ${monedaARS(info.total)}</strong></p>
-  `;
+  cont.innerHTML += `<hr><p><strong>Subtotal: ${monedaARS(subtotal)}</strong></p>`;
 }
 
 // ====== Inicialización ======
 document.addEventListener("DOMContentLoaded", () => {
-  // Mostrar catálogo al iniciar
-  mostrarCatalogoDOM();
+  const nombreGuardado = localStorage.getItem("nombreCliente");
+  if (nombreGuardado) document.getElementById("nombreCliente").value = nombreGuardado;
 
-  // Botón de finalizar compra
+  Swal.fire({
+    title: "Bienvenido 👟",
+    text: "Golden Crowz Snakers — Simulador de Ventas",
+    icon: "info",
+    confirmButtonText: "Comenzar"
+  });
+
+  mostrarCatalogo();
+
+  document.getElementById("nombreCliente").addEventListener("input", e => {
+    localStorage.setItem("nombreCliente", e.target.value);
+  });
+
+  document.getElementById("iniciarCompra").addEventListener("click", () => {
+    const nombre = document.getElementById("nombreCliente").value.trim();
+    if (!nombre) {
+      Swal.fire("Por favor ingresá tu nombre para continuar.");
+      return;
+    }
+    Swal.fire(`¡Hola ${nombre}! Empezá tu compra 😄`);
+  });
+
   document.getElementById("finalizarCompra").addEventListener("click", () => {
     if (!carrito.length) {
-      alert("No agregaste productos al carrito.");
+      Swal.fire("Tu carrito está vacío.");
       return;
     }
 
-    // Cupones
     const rawCupones = document.getElementById("inputCupones").value;
     let cupones = rawCupones.split(",").map(c => c.trim().toUpperCase()).filter(Boolean);
     if (cupones.length > 2) cupones = cupones.slice(0, 2);
 
-    // Subtotal y descuentos
     const subtotal = calcularSubtotal(carrito);
     const { descuento, etiquetas } = calcularDescuentoMultiple(subtotal, cupones);
-
-    // Envío
     const envioCosto = Number(document.getElementById("selectEnvio").value);
-    const envioEtiqueta = envioCosto === 0 ? "Retiro en local (gratis)" : "Envío estándar";
-
-    // Totales
     const { baseImponible, iva, total } = calcularTotales(subtotal, descuento, envioCosto);
 
-    // Construir resumen para alert
-    const lineasItems = carrito.map(i => `• ${i.nombre} x${i.cantidad} = ${monedaARS(i.precio * i.cantidad)}`).join("\n");
-
-    const resumenTexto = 
-      `¡Gracias por tu compra!\n\n` +
-      `Resumen de compra:\n${lineasItems}\n\n` +
-      `Subtotal: ${monedaARS(subtotal)}\n` +
-      `Descuento: -${monedaARS(descuento)} (${etiquetas.join(" | ") || "Sin cupones"})\n` +
-      `Envío: ${envioEtiqueta} → ${monedaARS(envioCosto)}\n` +
-      `Base imponible: ${monedaARS(baseImponible)}\n` +
-      `IVA (21%): ${monedaARS(iva)}\n` +
-      `TOTAL A PAGAR: ${monedaARS(total)}`;
-
-    alert(resumenTexto);
-
-    // Confirmar compra
-    const confirmar = confirm("¿Deseas confirmar la compra?");
-    if (confirmar) {
-      alert("¡Compra confirmada! Gracias por tu compra.");
-      carrito = [];
-      localStorage.removeItem("carrito");
-      mostrarResumenDOMFinal({
-        subtotal: 0,
-        descuento: 0,
-        etiquetas,
-        envio: { costo: 0, etiqueta: "N/A" },
-        baseImponible: 0,
-        iva: 0,
-        total: 0
-      });
-      mostrarCatalogoDOM();
-    } else {
-      alert("Compra cancelada. Podés seguir agregando productos.");
-    }
+    Swal.fire({
+      title: "¿Confirmar compra?",
+      html: `
+        <b>Subtotal:</b> ${monedaARS(subtotal)}<br>
+        <b>Descuento:</b> ${monedaARS(descuento)} (${etiquetas.join(", ")})<br>
+        <b>Envío:</b> ${monedaARS(envioCosto)}<br>
+        <b>Total final:</b> ${monedaARS(total)}
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Confirmar",
+      cancelButtonText: "Cancelar"
+    }).then(result => {
+      if (result.isConfirmed) {
+        Swal.fire("Compra confirmada 🎉", "Gracias por elegir Golden Crowz", "success");
+        carrito = [];
+        localStorage.removeItem("carrito");
+        mostrarResumen();
+        mostrarCatalogo();
+      }
+    });
   });
 });

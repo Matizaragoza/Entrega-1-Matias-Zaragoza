@@ -3,27 +3,55 @@ body {
     margin: 2rem;
     background: #f4f4f4;
 }
-h1{
+
+h1 {
     text-align: center;
     margin-bottom: 1rem;
+    color: #222;
+}
+
+#cliente {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#cliente input {
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+#cliente button {
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 #catalogo {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
 .producto {
     background: white;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    padding: 1rem;
-    width: 200px;
+    padding: 1.5rem;
+    width: 230px;
     text-align: center;
-    margin-top: 10px;
-    margin: 100px;
-}  
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.producto:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
 
 .producto button {
     background-color: #ff6f61;
@@ -34,7 +62,6 @@ h1{
     border-radius: 5px;
     cursor: pointer;
 }
-
 .producto button:hover {
     background-color: #ff3b2e;
 }
@@ -45,4 +72,14 @@ h1{
     padding: 1rem;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* SweetAlert2 botones personalizados */
+.swal2-confirm {
+    background-color: #ff6f61 !important;
+    border: none !important;
+}
+.swal2-cancel {
+    background-color: #ccc !important;
+    color: #333 !important;
 }
